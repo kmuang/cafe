@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🇮🇹 Milano Café</title> 
+  <link rel="shortcut icon" href="img/logo.png" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-amber-700 text-white p-5 shadow-md flex flex-col items-center justify-center text-center">
+    <div class="flex flex-col sm:flex-row justify-between items-center">
+      <div class="text-center sm:text-left">
+        <h1 class="text-2xl text-center sm:text-3xl font-bold">🇮🇹 Milano Café</h1>
+        <p class="text-sm sm:text-base">Fresh Coffee & Breakfast Classics</p>
+      </div>
+      <button id="cartToggle" class=" mt-3 ml-5 sm:mt-1 bg-white text-amber-700 px-5 py-3 rounded-full font-semibold hover:bg-green-100">🛒 </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto p-4 sm:p-6">
+    <!-- Coffee Menu -->
+    <section>
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 border-b-2 border-amber-700 inline-block">☕ Coffee Menu</h2>
+      <div id="coffeeMenu" class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+
+    <!-- Breakfast Menu -->
+    <section class="mt-8 sm:mt-10">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 border-b-2 border-amber-700 inline-block">🥞 Breakfast Menu</h2>
+      <div id="breakfastMenu" class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+  </main>
+
+  <!-- Cart Sidebar -->
+  <aside id="cartPanel" class="fixed right-0 top-0 h-full w-72 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto p-4 z-20">
+    <h2 class="text-lg font-semibold mb-3 border-b pb-2">Your Cart</h2>
+    <ul id="cart" class="space-y-3"></ul>
+    <div id="total" class="font-bold text-lg mt-4">Total: $0.00</div>
+    <button id="checkout" class="mt-4 w-full px-5 py-2 bg-amber-700 text-white rounded hover:bg-amber-800">Checkout</button>
+  </aside>
+
+  <!-- Overlay -->
+  <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-40 z-10"></div>
+
+  <script>
+    const coffeeMenu = [
+      { id: 1, name: 'Espresso', price: 3.00, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93' },
+      { id: 2, name: 'Cappuccino', price: 4.50, image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2FwcHVjY2lub3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=1400' },
+      { id: 3, name: 'Mocha', price: 5.00, image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096' }
+    ];
+
+    const breakfastMenu = [
+      { id: 4, name: 'Pancakes', price: 6.00, image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFuY2FrZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=1400' },
+      { id: 5, name: 'Omelette', price: 5.50, image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f' },
+      { id: 6, name: 'French Toast', price: 6.25, image: 'https://images.unsplash.com/photo-1551218808-94e220e084d2' }
+    ];
+
+    const cart = [];
+    const cartContainer = document.getElementById('cart');
+    const totalDisplay = document.getElementById('total');
+    const cartPanel = document.getElementById('cartPanel');
+    const overlay = document.getElementById('overlay');
+
+    function renderMenu(containerId, items) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = items.map(item => `
+        <div class='bg-white rounded-lg shadow hover:shadow-lg transition p-3 flex flex-col'>
+          <img src='${item.image}' alt='${item.name}' class='rounded-md h-40 w-full object-cover mb-3'>
+          <h3 class='text-lg font-semibold'>${item.name}</h3>
+          <p class='text-amber-700 font-bold mb-3'>$${item.price.toFixed(2)}</p>
+          <button onclick='addToCart(${item.id})' class='bg-amber-700 text-white py-1 rounded hover:bg-amber-800'>Add to Cart</button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id) {
+      const item = [...coffeeMenu, ...breakfastMenu].find(m => m.id === id);
+      const existing = cart.find(c => c.id === id);
+      if (existing) existing.qty++;
+      else cart.push({ ...item, qty: 1 });
+      renderCart();
+    }
+
+    function renderCart() {
+      cartContainer.innerHTML = cart.map(c => `
+        <li class='flex justify-between items-center bg-amber-50 rounded p-2 shadow'>
+          <div>
+            <h4 class='font-semibold text-sm'>${c.name}</h4>
+            <p class='text-xs'>$${c.price.toFixed(2)} × ${c.qty}</p>
+          </div>
+          <button onclick='removeFromCart(${c.id})' class='text-red-500 font-bold'>×</button>
+        </li>
+      `).join('');
+
+      const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
+    }
+
+    function removeFromCart(id) {
+      const index = cart.findIndex(c => c.id === id);
+      if (index !== -1) cart.splice(index, 1);
+      renderCart();
+    }
+
+    document.getElementById('checkout').addEventListener('click', () => {
+      if (cart.length === 0) return alert('Your cart is empty!');
+      alert('Thank you for your order!');
+      cart.length = 0;
+      renderCart();
+    });
+
+    // Mobile Cart Toggle
+    document.getElementById('cartToggle').addEventListener('click', () => {
+      cartPanel.classList.toggle('translate-x-full');
+      overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+      cartPanel.classList.add('translate-x-full');
+      overlay.classList.add('hidden');
+    });
+
+    renderMenu('coffeeMenu', coffeeMenu);
+    renderMenu('breakfastMenu', breakfastMenu);
+  </script>
+</body>
+</html>
