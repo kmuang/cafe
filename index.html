@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caffè Milano · Espresso Bar</title> 
+  <link rel="shortcut icon" href="img/logo.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Re-theme "amber" as a cream / terracotta / espresso palette so one accent colour is used everywhere.
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['"Playfair Display"', 'Georgia', 'serif'] },
+          colors: {
+            // cream paper, Italian red accent, espresso brown; "verde" is the tricolore green
+            amber: { 50: '#F8F1E1', 100: '#EFE3C7', 200: '#DCC9A0', 600: '#B5382C', 700: '#A12E24', 800: '#821F18', 900: '#2A1A12' },
+            verde: { 600: '#3A7048', 700: '#2F5D3A' }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .res-input { width: 100%; background: #fff; border: 1px solid #2A1A12; padding: .55rem .75rem; font: inherit; border-radius: 0; }
+    .res-input:focus { outline: 2px solid #A12E24; outline-offset: 1px; }
+    .res-input.invalid { border-color: #A12E24; background: #fdf0ee; }
+    html { scroll-behavior: smooth; }
+    .font-script { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 600; }
+    /* striped shop awning */
+    .awning { height: 14px; background: repeating-linear-gradient(90deg, #A12E24 0 28px, #F8F1E1 28px 56px);
+      border-bottom-left-radius: 14px 10px; border-bottom-right-radius: 14px 10px; }
+    .tricolore { height: 5px; background: linear-gradient(90deg, #2F5D3A 33.3%, #F8F1E1 33.3% 66.6%, #A12E24 66.6%); }
+    /* checkered tablecloth */
+    .checker { background-color: #F8F1E1;
+      background-image: linear-gradient(45deg, rgba(161,46,36,.08) 25%, transparent 25% 75%, rgba(161,46,36,.08) 75%),
+                        linear-gradient(45deg, rgba(161,46,36,.08) 25%, transparent 25% 75%, rgba(161,46,36,.08) 75%);
+      background-size: 48px 48px; background-position: 0 0, 24px 24px; }
+    .leader { flex: 1; border-bottom: 2px dotted #B8A57E; transform: translateY(-4px); min-width: 12px; }
+    .ornament::before, .ornament::after { content: ''; flex: 1; height: 1px; background: #B8A57E; }
+    @keyframes bump { 50% { transform: scale(1.35); } }
+    .bump { animation: bump 0.3s ease; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .bump { animation: none; } }
+  </style>
+</head>
+<body class="bg-amber-50 text-stone-800 font-sans antialiased">
+  <a href="#menu" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:px-3 focus:py-2 focus:rounded">Skip to menu</a>
+
+  <div class="sticky top-0 z-40 shadow-md">
+    <!-- Header -->
+    <header class="bg-amber-900 text-amber-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <a href="#" class="flex items-center gap-3 min-w-0">
+          <img src="img/logo.png" alt="" class="w-11 h-11 rounded-full object-cover bg-amber-100 ring-2 ring-amber-200" onerror="this.remove()">
+          <div class="min-w-0">
+            <h1 class="font-display text-xl sm:text-2xl font-bold leading-tight truncate tracking-wide">Caffè Milano</h1>
+            <p class="hidden sm:block text-xs text-amber-200 font-script">Espresso bar &amp; colazione</p>
+          </div>
+        </a>
+        <button id="cartToggle" aria-label="Open cart" class="relative bg-amber-50 text-amber-900 px-4 py-2.5 rounded-full font-semibold hover:bg-white transition flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-200">
+          <span aria-hidden="true">🛒</span>
+          <span id="cartHeaderTotal" class="hidden sm:inline text-sm">$0.00</span>
+          <span id="cartBadge" class="absolute -top-2 -right-2 bg-amber-700 text-white text-xs font-bold rounded-full min-w-[22px] h-[22px] px-1 hidden items-center justify-center shadow">0</span>
+        </button>
+      </div>
+    </header>
+    <div class="awning" aria-hidden="true"></div>
+
+    <!-- Category tabs -->
+    <nav aria-label="Menu categories" class="bg-amber-50/95 backdrop-blur border-b border-amber-200">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 flex gap-2 py-2 font-display">
+        <a href="#coffee" data-tab="coffee" class="tab px-4 py-1.5 rounded-full text-sm font-semibold border border-amber-200 transition">☕ Caffè</a>
+        <a href="#breakfast" data-tab="breakfast" class="tab px-4 py-1.5 rounded-full text-sm font-semibold border border-amber-200 transition">🥐 Colazione</a>
+        <a href="#reservations" data-tab="reservations" class="tab px-4 py-1.5 rounded-full text-sm font-semibold border border-amber-200 transition">🍽️ Prenota</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Hero -->
+  <section class="checker border-b border-amber-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-center">
+      <div class="inline-block bg-amber-50 border-2 border-amber-900 rounded-sm px-6 sm:px-12 py-8 shadow-[6px_6px_0_#2A1A12]">
+        <p class="font-script text-lg text-amber-700">Buongiorno!</p>
+        <h2 class="font-display text-3xl sm:text-5xl font-bold text-amber-900 mt-1 leading-tight">Un caffè, per favore.</h2>
+        <div class="tricolore w-24 mx-auto my-4" aria-hidden="true"></div>
+        <p class="text-stone-600 max-w-md mx-auto">Espresso pulled the Italian way, warm cornetti and breakfast classics. Order from the bar, pick up at the counter.</p>
+        <div class="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-stone-600">
+          <span>🕖 Aperto 7am – 3pm</span>
+          <span>📍 Pickup al banco</span>
+          <span>🔒 Pagamento sicuro con Square</span>
+        </div>
+        <a href="#coffee" class="inline-block mt-6 bg-amber-700 text-amber-50 px-7 py-3 rounded-sm font-display font-semibold tracking-wide hover:bg-amber-800 transition">Order Now →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main id="menu" class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+    <section id="coffee" class="scroll-mt-32 pt-10">
+      <div class="ornament flex items-center gap-4 mb-1">
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-amber-900 px-2">Il Caffè</h2>
+      </div>
+      <p class="font-script text-center text-stone-500 mb-6">Coffee, from the bar</p>
+      <div id="coffeeMenu" class="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+
+    <section id="breakfast" class="scroll-mt-32 pt-14">
+      <div class="ornament flex items-center gap-4 mb-1">
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-amber-900 px-2">La Colazione</h2>
+      </div>
+      <p class="font-script text-center text-stone-500 mb-6">Breakfast, served all morning</p>
+      <div id="breakfastMenu" class="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+    <section id="reservations" class="scroll-mt-32 pt-14">
+      <div class="ornament flex items-center gap-4 mb-1">
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-amber-900 px-2">Prenota un Tavolo</h2>
+      </div>
+      <p class="font-script text-center text-stone-500 mb-6">Reserve a table — we'll confirm by email</p>
+
+      <div class="max-w-2xl mx-auto bg-amber-50 border-2 border-amber-900 shadow-[5px_5px_0_#2A1A12] p-5 sm:p-8">
+        <form id="reservationForm" novalidate class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+
+          <div class="sm:col-span-2">
+            <label for="resName" class="block text-sm font-semibold text-amber-900 mb-1">Full name</label>
+            <input id="resName" name="name" type="text" required maxlength="80" autocomplete="name" class="res-input">
+          </div>
+          <div>
+            <label for="resEmail" class="block text-sm font-semibold text-amber-900 mb-1">Email</label>
+            <input id="resEmail" name="email" type="email" required maxlength="120" autocomplete="email" class="res-input">
+          </div>
+          <div>
+            <label for="resPhone" class="block text-sm font-semibold text-amber-900 mb-1">Phone <span class="font-normal text-stone-500">(optional)</span></label>
+            <input id="resPhone" name="phone" type="tel" maxlength="30" autocomplete="tel" class="res-input">
+          </div>
+          <div>
+            <label for="resDate" class="block text-sm font-semibold text-amber-900 mb-1">Date</label>
+            <input id="resDate" name="date" type="date" required class="res-input">
+          </div>
+          <div>
+            <label for="resTime" class="block text-sm font-semibold text-amber-900 mb-1">Time <span class="font-normal text-stone-500">(7:00am – 2:30pm)</span></label>
+            <input id="resTime" name="time" type="time" required min="07:00" max="14:30" step="900" class="res-input">
+          </div>
+          <div class="sm:col-span-2">
+            <label for="resGuests" class="block text-sm font-semibold text-amber-900 mb-1">Number of guests</label>
+            <select id="resGuests" name="guests" required class="res-input"></select>
+          </div>
+          <div class="sm:col-span-2">
+            <label for="resNotes" class="block text-sm font-semibold text-amber-900 mb-1">Special requests <span class="font-normal text-stone-500">(optional)</span></label>
+            <textarea id="resNotes" name="notes" rows="3" maxlength="500" class="res-input" placeholder="Allergies, high chair, celebration…"></textarea>
+          </div>
+
+          <p id="resStatus" role="alert" class="sm:col-span-2 text-sm text-center min-h-[1.25rem]"></p>
+          <button id="resSubmit" type="submit" class="sm:col-span-2 bg-amber-700 text-amber-50 py-3 font-display font-semibold tracking-wide hover:bg-amber-800 transition shadow-[3px_3px_0_#2A1A12] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <span id="resSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span id="resLabel">Request reservation</span>
+          </button>
+        </form>
+
+        <div id="resSuccess" class="hidden text-center py-6">
+          <div class="text-5xl mb-2">🍽️</div>
+          <h3 class="font-display text-3xl font-bold text-verde-700 mb-1">Thank you!</h3>
+          <p id="resSuccessMsg" class="text-stone-600 mb-5"></p>
+          <button id="resAgain" type="button" class="text-amber-700 underline">Make another reservation</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-amber-900 text-amber-200 text-center text-sm">
+    <div class="tricolore" aria-hidden="true"></div>
+    <div class="py-8">
+      <p class="font-display text-amber-50 text-2xl tracking-wide">Caffè Milano</p>
+      <p class="font-script mt-1">Grazie e arrivederci!</p>
+      <p class="mt-3 text-amber-200/80">Aperto ogni giorno · 7am – 3pm</p>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-amber-900 text-white text-sm px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-200"></div>
+
+  <!-- Cart Sidebar -->
+  <aside id="cartPanel" class="fixed right-0 top-0 h-full w-full sm:w-96 bg-amber-50 shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto z-50" role="dialog" aria-label="Shopping cart">
+    <div class="px-4 pt-4 pb-3 sticky top-0 bg-amber-50 z-10">
+      <div class="flex justify-between items-center">
+        <h2 id="panelTitle" class="font-display text-2xl font-bold text-amber-900">Il tuo ordine</h2>
+        <button id="cartClose" aria-label="Close cart" class="text-stone-500 hover:text-amber-700 text-3xl font-bold leading-none">&times;</button>
+      </div>
+      <div class="tricolore mt-3" aria-hidden="true"></div>
+    </div>
+
+    <!-- Step 1: cart -->
+    <div id="cartView" class="p-4">
+      <p id="emptyCart" class="text-center text-stone-500 py-10 font-script text-lg">Il carrello è vuoto.<br><span class="text-sm not-italic font-sans">Your cart is empty — add something delicious.</span></p>
+      <ul id="cart" class="space-y-3 mb-4"></ul>
+      <div id="total" class="font-display font-bold text-xl mt-6 pt-4 border-t-2 border-dashed border-amber-200 text-amber-900">Totale: $0.00</div>
+      <button id="checkout" class="mt-4 w-full px-5 py-3 bg-amber-700 text-amber-50 rounded-sm font-display font-semibold tracking-wide hover:bg-amber-800 transition shadow-[3px_3px_0_#2A1A12] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">Checkout</button>
+    </div>
+
+    <!-- Step 2: payment -->
+    <div id="paymentView" class="hidden p-4">
+      <button id="backToCart" class="text-sm text-amber-700 hover:underline mb-3">← Back to order</button>
+      <div class="bg-white border border-amber-200 shadow-sm p-4 mb-4" style="font-family: ui-monospace, Menlo, monospace;">
+        <h3 class="text-center font-display font-bold text-amber-900 tracking-widest uppercase text-sm">Receipt</h3>
+        <p class="text-center text-xs text-stone-500 mb-2">Caffè Milano</p>
+        <ul id="summaryList" class="text-sm divide-y divide-dashed divide-amber-200 border-y border-dashed border-amber-200 mb-2"></ul>
+        <div id="summaryTotal" class="flex justify-between font-bold text-base text-amber-900"></div>
+      </div>
+      <h3 class="font-display font-semibold text-amber-900 mb-2">Payment</h3>
+      <div id="card-container" class="min-h-[90px]"></div>
+      <button id="payButton" class="mt-3 w-full px-5 py-3 bg-verde-700 text-amber-50 rounded-sm font-display font-semibold tracking-wide hover:bg-verde-600 transition shadow-[3px_3px_0_#2A1A12] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2">
+        <span id="paySpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <span id="payLabel">Pay</span>
+      </button>
+      <p id="paymentStatus" role="alert" class="mt-2 text-sm text-center text-red-700"></p>
+      <p class="mt-3 text-xs text-stone-500 text-center">🔒 Secure payment by Square</p>
+    </div>
+
+    <!-- Step 3: success -->
+    <div id="successView" class="hidden p-6 text-center">
+      <div class="text-5xl mb-2">☕</div>
+      <h3 class="font-display text-3xl font-bold text-verde-700 mb-1">Thank you!</h3>
+      <p class="font-script text-stone-600 mb-4">Your order is confirmed. Enjoy!</p>
+      <p class="font-display text-2xl font-bold text-amber-900 mb-4" id="successAmount"></p>
+      <a id="receiptLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-block text-amber-700 underline mb-6">View receipt</a>
+      <button id="doneButton" class="w-full px-5 py-3 bg-amber-700 text-amber-50 rounded-sm font-display font-semibold tracking-wide hover:bg-amber-800 transition shadow-[3px_3px_0_#2A1A12]">Done</button>
+    </div>
+  </aside>
+
+  <!-- Overlay -->
+  <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-40 z-[45]"></div>
+
+  <script>
+    const coffeeMenu = [
+      { id: 1, name: 'Espresso', price: 3.00, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93' },
+      { id: 2, name: 'Cappuccino', price: 4.50, image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2FwcHVjY2lub3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=1400' },
+      { id: 3, name: 'Mocha', price: 5.00, image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096' },
+      { id: 7, name: 'Latte', price: 4.75, image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 8, name: 'Americano', price: 3.50, image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 9, name: 'Macchiato', price: 4.25, image: 'https://images.unsplash.com/photo-1546171753-97d7676e4602?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 10, name: 'Cold Brew', price: 5.50, image: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 11, name: 'Iced Coffee', price: 4.00, image: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 12, name: 'Flat White', price: 4.75, image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 13, name: 'Affogato', price: 6.00, image: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' }
+    ];
+
+    const breakfastMenu = [
+      { id: 4, name: 'Pancakes', price: 6.00, image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFuY2FrZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=1400' },
+      { id: 5, name: 'Omelette', price: 5.50, image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f' },
+      { id: 6, name: 'French Toast', price: 6.25, image: 'https://images.unsplash.com/photo-1551218808-94e220e084d2' },
+      { id: 14, name: 'Waffles', price: 7.00, image: 'https://images.unsplash.com/photo-1562376552-0d160a2f238d?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 15, name: 'Croissant', price: 3.50, image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 16, name: 'Bagel & Cream Cheese', price: 4.50, image: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 17, name: 'Eggs Benedict', price: 8.50, image: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 18, name: 'Avocado Toast', price: 7.50, image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 19, name: 'Breakfast Burrito', price: 8.00, image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 20, name: 'Scrambled Eggs', price: 5.75, image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 21, name: 'Bacon & Eggs', price: 7.25, image: 'https://images.unsplash.com/photo-1528607929212-2636ec44253e?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' },
+      { id: 22, name: 'Breakfast Sandwich', price: 6.50, image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-4.1.0&auto=format&fit=crop&w=800' }
+    ];
+
+    // Short descriptions and tags shown on each menu card.
+    const details = {
+      1: ['Rich, concentrated shot with a golden crema.', ['Hot']],
+      2: ['Espresso with steamed milk and thick velvety foam.', ['Hot', 'Milk']],
+      3: ['Espresso, chocolate and steamed milk.', ['Hot', 'Sweet']],
+      7: ['Smooth espresso with plenty of steamed milk.', ['Hot', 'Milk']],
+      8: ['Espresso lengthened with hot water.', ['Hot']],
+      9: ['Espresso "marked" with a dot of milk foam.', ['Hot']],
+      10: ['Steeped for 18 hours, served over ice.', ['Iced']],
+      11: ['Chilled coffee over ice, lightly sweet.', ['Iced']],
+      12: ['Double ristretto with silky microfoam.', ['Hot', 'Milk']],
+      13: ['Vanilla gelato drowned in a hot espresso shot.', ['Dessert', 'Sweet']],
+      4: ['Fluffy stack with butter and maple syrup.', ['Vegetarian', 'Sweet']],
+      5: ['Three-egg omelette with herbs and cheese.', ['Vegetarian', 'Savory']],
+      6: ['Thick brioche, cinnamon and powdered sugar.', ['Vegetarian', 'Sweet']],
+      14: ['Crisp Belgian waffle with berries and cream.', ['Vegetarian', 'Sweet']],
+      15: ['Flaky, buttery and baked fresh each morning.', ['Vegetarian']],
+      16: ['Toasted bagel with whipped cream cheese.', ['Vegetarian']],
+      17: ['Poached eggs, ham and hollandaise on muffin.', ['Savory']],
+      18: ['Sourdough, smashed avocado, chili and lemon.', ['Vegetarian', 'Savory']],
+      19: ['Eggs, potatoes, cheese and salsa in a tortilla.', ['Savory']],
+      20: ['Soft scrambled eggs with toast.', ['Vegetarian', 'Savory']],
+      21: ['Two eggs your way with crispy bacon.', ['Savory']],
+      22: ['Egg, cheese and sausage on a toasted roll.', ['Savory', 'To go']]
+    };
+
+    const allItems = [...coffeeMenu, ...breakfastMenu];
+    const CART_KEY = 'milanoCart';
+
+    // Only ids and quantities are stored; names and prices always come from the menu.
+    function loadCart() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+        return saved.flatMap(s => {
+          const item = allItems.find(m => m.id === s.id);
+          return item && Number.isInteger(s.qty) && s.qty > 0 ? [{ ...item, qty: Math.min(s.qty, 99) }] : [];
+        });
+      } catch { return []; }
+    }
+
+    function saveCart() {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart.map(c => ({ id: c.id, qty: c.qty }))));
+    }
+
+    const cart = loadCart();
+    const cartContainer = document.getElementById('cart');
+    const totalDisplay = document.getElementById('total');
+    const cartPanel = document.getElementById('cartPanel');
+    const overlay = document.getElementById('overlay');
+    const cartBadge = document.getElementById('cartBadge');
+    const emptyCart = document.getElementById('emptyCart');
+    const checkoutBtn = document.getElementById('checkout');
+
+    // Italian names shown on the menu; English names stay in the cart, receipt and server.
+    const italian = {
+      1: 'Espresso', 2: 'Cappuccino', 3: 'Mocaccino', 7: 'Caffè Latte', 8: 'Caffè Americano', 9: 'Caffè Macchiato',
+      10: 'Cold Brew', 11: 'Caffè Freddo', 12: 'Flat White', 13: 'Affogato al Caffè',
+      4: 'Frittelle', 5: 'Frittata', 6: 'Pane Dorato', 14: 'Cialde', 15: 'Cornetto', 16: 'Bagel con Formaggio',
+      17: 'Uova alla Benedict', 18: 'Pane e Avocado', 19: 'Burrito della Colazione', 20: 'Uova Strapazzate',
+      21: 'Uova e Pancetta', 22: 'Panino della Colazione'
+    };
+
+    function renderMenu(containerId, items) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = items.map(item => {
+        const [desc, tags] = details[item.id] || ['', []];
+        const title = italian[item.id] || item.name;
+        const subtitle = title.toLowerCase() === item.name.toLowerCase() ? '' : item.name;
+        return `
+        <article class='group bg-amber-50 shadow-[5px_5px_0_#2A1A12] border-2 border-amber-900 flex flex-col transition hover:-translate-y-0.5'>
+          <div class='aspect-[4/3] bg-amber-100 overflow-hidden border-b-2 border-amber-900'>
+            <img src='${item.image}' alt='${item.name}' loading='lazy' onerror="this.style.display='none'" class='w-full h-full object-cover sepia-[.25] group-hover:scale-105 transition duration-500'>
+          </div>
+          <div class='p-4 flex flex-col flex-1'>
+            <h3 class='font-display text-xl font-bold text-amber-900 leading-tight'>${title}</h3>
+            <p class='font-script text-sm text-stone-500 min-h-[1.25rem]'>${subtitle}</p>
+            <p class='text-sm text-stone-600 mt-2 flex-1'>${desc}</p>
+            <div class='flex flex-wrap gap-1.5 mt-3'>
+              ${tags.map(t => `<span class='text-[11px] uppercase tracking-wider px-2 py-0.5 border border-amber-900/40 text-amber-900'>${t}</span>`).join('')}
+            </div>
+            <div class='flex items-end gap-2 mt-4'>
+              <span class='font-display text-sm text-stone-500'>Prezzo</span>
+              <span class='leader' aria-hidden='true'></span>
+              <span class='font-display text-xl font-bold text-amber-700'>$${item.price.toFixed(2)}</span>
+            </div>
+            <button onclick='addToCart(${item.id})' aria-label='Add ${item.name} to cart' class='mt-3 bg-amber-700 text-amber-50 py-2 font-display font-semibold tracking-wide hover:bg-amber-800 active:scale-95 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-900 focus-visible:ring-offset-2'>Order Now</button>
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('opacity-0'), 1600);
+    }
+
+    function addToCart(id) {
+      const item = allItems.find(m => m.id === id);
+      const existing = cart.find(c => c.id === id);
+      if (existing) existing.qty = Math.min(existing.qty + 1, 99);
+      else cart.push({ ...item, qty: 1 });
+      renderCart();
+      showToast(`Perfetto! ${italian[id] || item.name} aggiunto ☕`);
+      cartBadge.classList.remove('bump');
+      void cartBadge.offsetWidth;
+      cartBadge.classList.add('bump');
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(c => c.id === id);
+      if (!item) return;
+      item.qty = Math.min(item.qty + delta, 99);
+      if (item.qty <= 0) return removeFromCart(id);
+      renderCart();
+    }
+
+    function cartTotal() {
+      return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function renderCart() {
+      cartContainer.innerHTML = cart.map(c => `
+        <li class='flex items-center bg-white border border-amber-200 p-2 gap-3'>
+          <img src='${c.image}' alt='${c.name}' loading='lazy' onerror="this.style.visibility='hidden'" class='w-16 h-16 object-cover shrink-0 border border-amber-900 bg-amber-100 sepia-[.25]'>
+          <div class='min-w-0 flex-1'>
+            <h4 class='font-display font-semibold text-sm truncate text-amber-900'>${italian[c.id] || c.name}</h4>
+            <p class='text-xs text-stone-500'>$${c.price.toFixed(2)} each</p>
+          </div>
+          <div class='flex items-center gap-2 shrink-0'>
+            <button onclick='changeQty(${c.id}, -1)' aria-label='Decrease quantity of ${c.name}' class='w-7 h-7 rounded-full bg-white border border-amber-700 text-amber-700 font-bold hover:bg-amber-100'>−</button>
+            <span class='w-5 text-center text-sm font-semibold' aria-live='polite'>${c.qty}</span>
+            <button onclick='changeQty(${c.id}, 1)' aria-label='Increase quantity of ${c.name}' class='w-7 h-7 rounded-full bg-white border border-amber-700 text-amber-700 font-bold hover:bg-amber-100'>+</button>
+            <button onclick='removeFromCart(${c.id})' aria-label='Remove ${c.name}' class='text-red-500 font-bold ml-1'>×</button>
+          </div>
+        </li>
+      `).join('');
+
+      const total = cartTotal();
+      totalDisplay.textContent = `Totale: $${total.toFixed(2)}`;
+      emptyCart.classList.toggle('hidden', cart.length > 0);
+      checkoutBtn.disabled = cart.length === 0;
+      saveCart();
+
+      // Update cart badge
+      const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+      if (totalQty > 0) {
+        cartBadge.textContent = totalQty > 99 ? '99+' : totalQty;
+        cartBadge.classList.remove('hidden');
+        cartBadge.classList.add('flex');
+      } else {
+        cartBadge.classList.add('hidden');
+        cartBadge.classList.remove('flex');
+      }
+      document.getElementById('cartHeaderTotal').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('cartToggle').setAttribute('aria-label', `Open cart, ${totalQty} item${totalQty === 1 ? '' : 's'}`);
+    }
+
+    function removeFromCart(id) {
+      const index = cart.findIndex(c => c.id === id);
+      if (index !== -1) cart.splice(index, 1);
+      renderCart();
+    }
+
+    const views = { cart: 'cartView', payment: 'paymentView', success: 'successView' };
+    const panelTitles = { cart: 'Your order', payment: 'Checkout', success: 'Order complete' };
+    const payButton = document.getElementById('payButton');
+    const paySpinner = document.getElementById('paySpinner');
+    const payLabel = document.getElementById('payLabel');
+    const paymentStatus = document.getElementById('paymentStatus');
+    let card = null;
+    let paying = false;
+
+    function showView(name) {
+      Object.entries(views).forEach(([key, id]) => document.getElementById(id).classList.toggle('hidden', key !== name));
+      document.getElementById('panelTitle').textContent = panelTitles[name];
+      cartPanel.scrollTop = 0;
+    }
+
+    function setStatus(msg) {
+      paymentStatus.textContent = msg;
+    }
+
+    function setPaying(on) {
+      paying = on;
+      payButton.disabled = on || !card;
+      paySpinner.classList.toggle('hidden', !on);
+      payLabel.textContent = on ? 'Processing…' : `Pay $${cartTotal().toFixed(2)}`;
+    }
+
+    function renderSummary() {
+      document.getElementById('summaryList').innerHTML = cart.map(c => `
+        <li class='flex items-center gap-2 py-1.5'>
+          <img src='${c.image}' alt='' loading='lazy' onerror="this.style.visibility='hidden'" class='w-10 h-10 object-cover shrink-0 border border-amber-900 bg-amber-100'>
+          <span class='flex-1 min-w-0 truncate'>${c.qty} × ${c.name}</span>
+          <span>$${(c.price * c.qty).toFixed(2)}</span>
+        </li>
+      `).join('');
+      document.getElementById('summaryTotal').innerHTML = `<span>TOTAL</span><span>$${cartTotal().toFixed(2)}</span>`;
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (window.Square) return resolve();
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load Square SDK'));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function initSquareCard() {
+      if (card) return;
+      const config = await (await fetch('/api/config')).json();
+      if (!config.appId || !config.locationId) throw new Error('Square is not configured.');
+      await loadScript(config.sdkUrl);
+      const payments = window.Square.payments(config.appId, config.locationId);
+      const newCard = await payments.card();
+      await newCard.attach('#card-container');
+      card = newCard;
+    }
+
+    async function destroyCard() {
+      if (!card) return;
+      const old = card;
+      card = null;
+      try { await old.destroy(); } catch {}
+    }
+
+    checkoutBtn.addEventListener('click', async () => {
+      if (cart.length === 0) return;
+      renderSummary();
+      setStatus('');
+      showView('payment');
+      setPaying(false);
+      try {
+        await initSquareCard();
+      } catch (err) {
+        setStatus(err.message);
+      }
+      setPaying(false);
+    });
+
+    document.getElementById('backToCart').addEventListener('click', async () => {
+      if (paying) return;
+      await destroyCard();
+      showView('cart');
+    });
+
+    payButton.addEventListener('click', async () => {
+      if (!card || cart.length === 0 || paying) return;
+      setPaying(true);
+      setStatus('');
+      try {
+        const result = await card.tokenize();
+        if (result.status !== 'OK') throw new Error(result.errors?.[0]?.message || 'Please check your card details.');
+        const res = await fetch('/api/pay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceId: result.token, items: cart.map(c => ({ id: c.id, qty: c.qty })) })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Payment failed. Please try another card.');
+
+        // Show what the server actually charged.
+        document.getElementById('successAmount').textContent = `$${(data.amount / 100).toFixed(2)} paid`;
+        const receipt = document.getElementById('receiptLink');
+        receipt.classList.toggle('hidden', !data.receiptUrl);
+        if (data.receiptUrl) receipt.href = data.receiptUrl;
+        cart.length = 0;
+        renderCart();
+        await destroyCard();
+        showView('success');
+      } catch (err) {
+        setStatus(err.message);
+      } finally {
+        setPaying(false);
+      }
+    });
+
+    document.getElementById('doneButton').addEventListener('click', () => {
+      closeCart();
+      showView('cart');
+    });
+
+    function closeCart() {
+      if (!document.getElementById('successView').classList.contains('hidden')) showView('cart');
+      cartPanel.classList.add('translate-x-full');
+      overlay.classList.add('hidden');
+      cartPanel.setAttribute('aria-hidden', 'true');
+      cartPanel.inert = true;
+      document.getElementById('cartToggle').focus();
+    }
+
+    function openCart() {
+      cartPanel.classList.remove('translate-x-full');
+      overlay.classList.remove('hidden');
+      cartPanel.setAttribute('aria-hidden', 'false');
+      cartPanel.inert = false;
+      document.getElementById('cartClose').focus();
+    }
+    cartPanel.inert = true;
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !cartPanel.classList.contains('translate-x-full')) closeCart();
+    });
+
+    // Highlight the tab for the section currently in view
+    const tabs = [...document.querySelectorAll('.tab')];
+    function setActiveTab(name) {
+      tabs.forEach(t => {
+        const on = t.dataset.tab === name;
+        t.classList.toggle('bg-amber-700', on);
+        t.classList.toggle('text-white', on);
+        t.classList.toggle('border-amber-700', on);
+        t.classList.toggle('text-amber-900', !on);
+      });
+    }
+    const sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) setActiveTab(e.target.id); });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+    ['coffee', 'breakfast', 'reservations'].forEach(id => sectionObserver.observe(document.getElementById(id)));
+    setActiveTab('coffee');
+
+    // Cart Toggle
+    document.getElementById('cartToggle').addEventListener('click', () => {
+      if (cartPanel.classList.contains('translate-x-full')) {
+        openCart();
+      } else {
+        closeCart();
+      }
+    });
+
+    // Close Cart Button
+    document.getElementById('cartClose').addEventListener('click', closeCart);
+
+    // Close Cart on Overlay Click
+    overlay.addEventListener('click', closeCart);
+
+    renderMenu('coffeeMenu', coffeeMenu);
+    renderMenu('breakfastMenu', breakfastMenu);
+    renderCart(); // Initialize cart badge
+
+    // ---- Reservations (Formspree) ----
+    const resForm = document.getElementById('reservationForm');
+    const resStatus = document.getElementById('resStatus');
+    const resSubmit = document.getElementById('resSubmit');
+    const resDate = document.getElementById('resDate');
+    const resGuests = document.getElementById('resGuests');
+    let formspreeId = null;
+    const configReady = fetch('/api/config').then(r => r.json()).then(c => { formspreeId = c.formspreeId || null; }).catch(() => {});
+
+    resGuests.innerHTML = Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? 'guests' : 'guest'}</option>`).join('')
+      + '<option value="11+">11 or more (we\'ll call you)</option>';
+    resGuests.value = '2';
+
+    function localISODate(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    const today = new Date();
+    resDate.min = localISODate(today);
+    resDate.max = localISODate(new Date(today.getFullYear(), today.getMonth() + 3, today.getDate()));
+
+    function resError(msg) {
+      resStatus.textContent = msg;
+      resStatus.className = 'sm:col-span-2 text-sm text-center min-h-[1.25rem] text-red-700';
+    }
+
+    function validateReservation() {
+      let firstBad = null;
+      [...resForm.elements].forEach(el => {
+        if (!el.name || el.name === '_gotcha') return;
+        let bad = !el.checkValidity();
+        if (el.name === 'name' && !el.value.trim()) bad = true;
+        el.classList.toggle('invalid', bad);
+        if (bad && !firstBad) firstBad = el;
+      });
+      if (firstBad) {
+        resError(firstBad.name === 'date' && firstBad.value ? 'Please choose a date within the next 3 months.'
+          : firstBad.name === 'time' && firstBad.value ? 'We take reservations between 7:00am and 2:30pm.'
+          : 'Please fill in the highlighted fields.');
+        firstBad.focus();
+        return false;
+      }
+      const when = new Date(`${resDate.value}T${document.getElementById('resTime').value}`);
+      if (when < new Date()) {
+        resDate.classList.add('invalid');
+        resError('That time has already passed. Please choose a later time.');
+        return false;
+      }
+      return true;
+    }
+
+    resForm.addEventListener('input', e => e.target.classList.remove('invalid'));
+
+    resForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      resStatus.textContent = '';
+      if (!validateReservation()) return;
+      await configReady;
+      if (!formspreeId) return resError('Reservations are not available right now. Please call us instead.');
+
+      resSubmit.disabled = true;
+      document.getElementById('resSpinner').classList.remove('hidden');
+      document.getElementById('resLabel').textContent = 'Sending…';
+      try {
+        const data = Object.fromEntries(new FormData(resForm));
+        data._subject = `New reservation: ${data.name}, ${data.date} ${data.time}, ${data.guests} guests`;
+        const res = await fetch(`https://formspree.io/f/${encodeURIComponent(formspreeId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error();
+        const niceDate = new Date(`${data.date}T${data.time}`).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        document.getElementById('resSuccessMsg').textContent = `Your request for ${data.guests} on ${niceDate} was sent. We'll confirm at ${data.email}.`;
+        resForm.classList.add('hidden');
+        document.getElementById('resSuccess').classList.remove('hidden');
+        resForm.reset();
+        resGuests.value = '2';
+      } catch {
+        resError('Something went wrong sending your request. Please try again.');
+      } finally {
+        resSubmit.disabled = false;
+        document.getElementById('resSpinner').classList.add('hidden');
+        document.getElementById('resLabel').textContent = 'Request reservation';
+      }
+    });
+
+    document.getElementById('resAgain').addEventListener('click', () => {
+      document.getElementById('resSuccess').classList.add('hidden');
+      resForm.classList.remove('hidden');
+      resStatus.textContent = '';
+    });
+  </script>
+</body>
+</html>
